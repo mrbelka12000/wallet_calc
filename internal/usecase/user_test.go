@@ -143,3 +143,187 @@ func TestUserUsecase_Register(t *testing.T) {
 		})
 	}
 }
+
+func TestUserUsecase_Login(t *testing.T) {
+	var (
+		ctrl         = gomock.NewController(t)
+		userRepoMock = NewMockuserRepository(ctrl)
+		ctx          = context.Background()
+	)
+	defer ctrl.Finish()
+
+	db, _, err := CreateMockDB()
+	if err != nil {
+		t.Errorf("CreateMockDB() error = %v", err)
+		return
+	}
+
+	pgGorm := &postgres.Gorm{
+		DB: db,
+	}
+
+	cases := []struct {
+		name string
+
+		req domainmodel.User
+
+		mocks func()
+
+		wantClientError bool
+		wantErr         bool
+	}{
+		{
+			name: "ok",
+			req: domainmodel.User{
+				Email:    "beka.teka11",
+				Password: "test",
+			},
+
+			mocks: func() {
+				userRepoMock.EXPECT().Get(gomock.Any(), entity.User{
+					Email: "beka.teka11",
+				}).Return(entity.User{
+					Password: "$2a$10$MBhVGL.VgsL4gqyV2lRQoeEYW16wmzSeX.3YGs.ZyN.0IWdPNtWRC",
+				}, nil)
+			},
+		},
+		{
+			name: "error invalid password",
+			req: domainmodel.User{
+				Email:    "beka.teka11",
+				Password: "testtest",
+			},
+
+			mocks: func() {
+				userRepoMock.EXPECT().Get(gomock.Any(), entity.User{
+					Email: "beka.teka11",
+				}).Return(entity.User{
+					Password: "$2a$10$MBhVGL.VgsL4gqyV2lRQoeEYW16wmzSeX.3YGs.ZyN.0IWdPNtWRC",
+				}, nil)
+			},
+
+			wantErr:         true,
+			wantClientError: true,
+		},
+		{
+			name: "error get user",
+			req: domainmodel.User{
+				Email:    "beka.teka11",
+				Password: "test",
+			},
+
+			mocks: func() {
+				userRepoMock.EXPECT().Get(gomock.Any(), entity.User{
+					Email: "beka.teka11",
+				}).Return(entity.User{}, assert.AnError)
+			},
+			wantErr: true,
+		},
+		{
+			name: "error user not found",
+			req: domainmodel.User{
+				Email:    "beka.teka11",
+				Password: "test",
+			},
+
+			mocks: func() {
+				userRepoMock.EXPECT().Get(gomock.Any(), entity.User{
+					Email: "beka.teka11",
+				}).Return(entity.User{}, gorm.ErrRecordNotFound)
+			},
+			wantErr:         true,
+			wantClientError: true,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.mocks != nil {
+				tc.mocks()
+			}
+
+			uc := NewUserUsecase(userRepoMock, pgGorm)
+			_, err := uc.Login(ctx, tc.req)
+			if tc.wantErr {
+				assert.Error(t, err)
+				var clientErr ClientError
+				if errors.As(err, &clientErr) && !tc.wantClientError {
+					t.Errorf("Received client error, want server error: %v", err)
+				} else if !errors.As(err, &clientErr) && tc.wantClientError {
+					t.Errorf("Received server error, want client error: %v", err)
+				}
+				return
+			}
+			assert.NoError(t, err)
+		})
+	}
+}
+
+func TestUserUsecase_Get(t *testing.T) {
+	var (
+		ctrl         = gomock.NewController(t)
+		userRepoMock = NewMockuserRepository(ctrl)
+		ctx          = context.Background()
+	)
+	defer ctrl.Finish()
+
+	db, _, err := CreateMockDB()
+	if err != nil {
+		t.Errorf("CreateMockDB() error = %v", err)
+		return
+	}
+
+	pgGorm := &postgres.Gorm{
+		DB: db,
+	}
+
+	cases := []struct {
+		name string
+
+		req domainmodel.User
+
+		mocks func()
+
+		wantErr bool
+	}{
+		{
+			name: "ok",
+			req: domainmodel.User{
+				Email: "beka.teka11",
+			},
+			mocks: func() {
+				userRepoMock.EXPECT().Get(gomock.Any(), entity.User{
+					Email: "beka.teka11",
+				}).Return(entity.User{}, nil)
+			},
+		},
+		{
+			name: "error get user",
+			req: domainmodel.User{
+				Email: "beka.teka11",
+			},
+			mocks: func() {
+				userRepoMock.EXPECT().Get(gomock.Any(), entity.User{
+					Email: "beka.teka11",
+				}).Return(entity.User{}, assert.AnError)
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.mocks != nil {
+				tc.mocks()
+			}
+
+			uc := NewUserUsecase(userRepoMock, pgGorm)
+			_, err := uc.Get(ctx, tc.req)
+			if tc.wantErr {
+				assert.Error(t, err)
+				return
+			}
+			assert.NoError(t, err)
+		})
+	}
+}

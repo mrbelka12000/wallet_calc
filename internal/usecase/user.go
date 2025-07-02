@@ -77,6 +77,10 @@ func (uc *UserUsecase) Login(ctx context.Context, req domainmodel.User) (dto.Use
 
 	user, err := uc.repo.Get(uc.db.WithCtx(ctx).DB, userReq)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return dto.User{}, newClientError("User not found")
+		}
+
 		return dto.User{}, err
 	}
 

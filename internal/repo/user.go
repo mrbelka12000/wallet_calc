@@ -1,8 +1,6 @@
 package repo
 
 import (
-	"errors"
-
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
@@ -39,9 +37,6 @@ func (u *User) Get(db *gorm.DB, req entity.User) (entity.User, error) {
 	}
 
 	if err := query.First(&result).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return result, nil
-		}
 		return result, err
 	}
 
