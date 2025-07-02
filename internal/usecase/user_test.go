@@ -3,7 +3,6 @@ package usecase
 import (
 	"context"
 	"errors"
-	"fmt"
 	"testing"
 	"time"
 
@@ -130,7 +129,6 @@ func TestUserUsecase_Register(t *testing.T) {
 
 			err := uc.Register(ctx, tc.req)
 			if tc.wantErr {
-				fmt.Println(err)
 				assert.Error(t, err)
 				var clientErr ClientError
 				if errors.As(err, &clientErr) && !tc.wantClientError {
