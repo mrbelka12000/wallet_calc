@@ -11,6 +11,7 @@ type (
 		log                *slog.Logger
 		userUsecase        userUsecase
 		transactionUsecase transactionUsecase
+		categoryUsecase
 	}
 )
 

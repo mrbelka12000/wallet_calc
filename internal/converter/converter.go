@@ -39,6 +39,30 @@ func ConvertFromDTOUserCUToDomainModel(u dto.UserCU) domainmodel.User {
 	}
 }
 
+func ConvertFromEntityCategoriesToDM(categories []entity.Category) []domainmodel.Category {
+	dmCategories := make([]domainmodel.Category, len(categories))
+	for i, category := range categories {
+		dmCategories[i] = domainmodel.Category{
+			ID:   category.ID,
+			Name: category.Name,
+			Type: category.Type,
+		}
+	}
+	return dmCategories
+}
+
+func ConvertFromDMCategoriesToDTO(categories []domainmodel.Category) []dto.CategoryResp {
+	dmCategories := make([]dto.CategoryResp, len(categories))
+	for i, category := range categories {
+		dmCategories[i] = dto.CategoryResp{
+			ID:   category.ID,
+			Name: category.Name,
+			Type: category.Type,
+		}
+	}
+	return dmCategories
+}
+
 func ConvertFromEntityAccountsToDTO(accounts []entity.Account) []dto.AccountResp {
 	dtoAccounts := make([]dto.AccountResp, len(accounts))
 	for i, account := range accounts {

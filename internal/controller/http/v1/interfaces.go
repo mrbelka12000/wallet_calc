@@ -16,4 +16,9 @@ type (
 
 	transactionUsecase interface {
 	}
+
+	categoryUsecase interface {
+		Create(ctx context.Context, req domainmodel.Category) error
+		List(ctx context.Context) ([]domainmodel.Category, error)
+	}
 )

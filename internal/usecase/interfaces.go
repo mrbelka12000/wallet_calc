@@ -21,6 +21,11 @@ type (
 		Save(db *gorm.DB, req entity.Account) error
 	}
 
+	categoryRepository interface {
+		Create(db *gorm.DB, req entity.Category) error
+		List(db *gorm.DB) ([]entity.Category, error)
+	}
+
 	db interface {
 		TxBegin(ctx context.Context) *postgres.Gorm
 		WithCtx(ctx context.Context) *postgres.Gorm
