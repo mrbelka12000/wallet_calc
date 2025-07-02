@@ -35,6 +35,7 @@ func ConvertFromDMUser(user domainmodel.User) User {
 	}
 }
 
+// Matches implements matcher interface for go mock
 func (u User) Matches(args interface{}) bool {
 	arg, ok := args.(User)
 	if !ok {
@@ -44,6 +45,7 @@ func (u User) Matches(args interface{}) bool {
 	return u.Email == arg.Email && u.Name == arg.Name
 }
 
+// String implements matcher interface for go mock
 func (u User) String() string {
 	return fmt.Sprintf("User{Email: %s, Name: %s}", u.Email, u.Name)
 }

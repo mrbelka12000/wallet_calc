@@ -9,6 +9,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 
+	"github.com/mrbelka12000/wallet_calc/internal/converter"
 	domainmodel "github.com/mrbelka12000/wallet_calc/internal/domain_model"
 	"github.com/mrbelka12000/wallet_calc/internal/dto"
 	"github.com/mrbelka12000/wallet_calc/internal/entity"
@@ -75,7 +76,7 @@ func (uc *UserUsecase) Login(ctx context.Context, req domainmodel.User) (dto.Use
 		Email: req.Email,
 	}
 
-	user, err := uc.repo.Get(uc.db.WithCtx(ctx).DB, userReq)
+	entityUser, err := uc.repo.Get(uc.db.WithCtx(ctx).DB, userReq)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return dto.User{}, newClientError("User not found")
@@ -84,11 +85,11 @@ func (uc *UserUsecase) Login(ctx context.Context, req domainmodel.User) (dto.Use
 		return dto.User{}, err
 	}
 
-	if !isValidPassword(user.Password, req.Password) {
+	if !isValidPassword(entityUser.Password, req.Password) {
 		return dto.User{}, newClientError("Email or Password is incorrect")
 	}
 
-	return dto.ConvertFromEntityUser(user, false), nil
+	return converter.ConvertFromEntityUserToDTO(entityUser, false), nil
 }
 
 func (uc *UserUsecase) Get(ctx context.Context, req domainmodel.User) (dto.User, error) {
@@ -97,7 +98,7 @@ func (uc *UserUsecase) Get(ctx context.Context, req domainmodel.User) (dto.User,
 		return dto.User{}, err
 	}
 
-	return dto.ConvertFromEntityUser(entityUser, false), nil
+	return converter.ConvertFromEntityUserToDTO(entityUser, false), nil
 }
 
 func generateHashFromPassword(password string) ([]byte, error) {
