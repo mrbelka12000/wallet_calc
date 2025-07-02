@@ -12,6 +12,7 @@ import (
 	v1 "github.com/mrbelka12000/wallet_calc/internal/controller/http/v1"
 	"github.com/mrbelka12000/wallet_calc/internal/repo"
 	"github.com/mrbelka12000/wallet_calc/internal/usecase"
+	"github.com/mrbelka12000/wallet_calc/migrations"
 	"github.com/mrbelka12000/wallet_calc/pkg/config"
 	"github.com/mrbelka12000/wallet_calc/pkg/gorm/postgres"
 	"github.com/mrbelka12000/wallet_calc/pkg/server"
@@ -31,12 +32,17 @@ func main() {
 		return
 	}
 
+	migrations.RunMigrations(db)
+
 	userRepo := repo.NewUser()
 	userUsecase := usecase.NewUserUsecase(userRepo, db)
 
+	categoryRepo := repo.NewCategory()
+	categoryUsecase := usecase.NewCategoryUsecase(categoryRepo, db)
+
 	mx := mux.NewRouter()
 
-	v1.InitControllers(mx, userUsecase, nil, log)
+	v1.InitControllers(mx, userUsecase, nil, categoryUsecase, log)
 
 	srv := server.New(mx, cfg.HTTPPort)
 	srv.Start()

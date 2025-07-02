@@ -11,15 +11,16 @@ type (
 		log                *slog.Logger
 		userUsecase        userUsecase
 		transactionUsecase transactionUsecase
-		categoryUsecase
+		categoryUsecase    categoryUsecase
 	}
 )
 
-func InitControllers(mx *mux.Router, u userUsecase, t transactionUsecase, log *slog.Logger) {
+func InitControllers(mx *mux.Router, u userUsecase, t transactionUsecase, cu categoryUsecase, log *slog.Logger) {
 	c := &Controller{
 		log:                log,
 		userUsecase:        u,
 		transactionUsecase: t,
+		categoryUsecase:    cu,
 	}
 
 	setUpRoutes(mx, c)

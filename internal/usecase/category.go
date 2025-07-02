@@ -18,8 +18,8 @@ type (
 	}
 )
 
-func NewCategoryUsecase(repo categoryRepository, db db) CategoryUsecase {
-	return CategoryUsecase{
+func NewCategoryUsecase(repo categoryRepository, db db) *CategoryUsecase {
+	return &CategoryUsecase{
 		repo: repo,
 		db:   db,
 	}
