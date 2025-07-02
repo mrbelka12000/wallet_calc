@@ -38,3 +38,18 @@ func ConvertFromDTOUserCUToDomainModel(u dto.UserCU) domainmodel.User {
 		Password: u.Password,
 	}
 }
+
+func ConvertFromEntityAccountsToDTO(accounts []entity.Account) []dto.AccountResp {
+	dtoAccounts := make([]dto.AccountResp, len(accounts))
+	for i, account := range accounts {
+		dtoAccounts[i] = dto.AccountResp{
+			ID:        account.ID,
+			UserID:    account.UserID,
+			Name:      account.Name,
+			Balance:   account.Balance,
+			CreatedAt: account.CreatedAt,
+		}
+	}
+
+	return dtoAccounts
+}

@@ -16,6 +16,11 @@ type (
 		Get(db *gorm.DB, req entity.User) (entity.User, error)
 	}
 
+	accountRepository interface {
+		List(db *gorm.DB, req entity.Account) ([]entity.Account, error)
+		Save(db *gorm.DB, req entity.Account) error
+	}
+
 	db interface {
 		TxBegin(ctx context.Context) *postgres.Gorm
 		WithCtx(ctx context.Context) *postgres.Gorm
