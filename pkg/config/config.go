@@ -20,6 +20,7 @@ type (
 		ServiceName string `env:"SERVICE_NAME,required"`
 		HTTPPort    string `env:"HTTP_PORT, default=8084"`
 		PublicURL   string `env:"PUBLIC_URL,required"`
+		SecretKey   string `env:"SECRET_KEY,required"`
 	}
 
 	DBConfig struct {

@@ -42,12 +42,12 @@ func main() {
 
 	mx := mux.NewRouter()
 
-	v1.InitControllers(mx, userUsecase, nil, categoryUsecase, log)
+	v1.InitControllers(cfg, mx, userUsecase, nil, categoryUsecase, log)
 
 	srv := server.New(mx, cfg.HTTPPort)
 	srv.Start()
 
-	log.Info("service started on port", cfg.HTTPPort)
+	log.Info("service started", "port", cfg.HTTPPort)
 
 	gs := make(chan os.Signal, 1)
 	signal.Notify(gs, syscall.SIGINT, syscall.SIGTERM)

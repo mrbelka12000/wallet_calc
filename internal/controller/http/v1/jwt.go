@@ -11,8 +11,6 @@ import (
 	"github.com/mrbelka12000/wallet_calc/internal/dto"
 )
 
-var jwtSecretKey []byte
-
 type Token struct {
 	JWT string `json:"jwt"`
 }
@@ -25,7 +23,7 @@ func (c *Controller) buildJWT(user dto.User) (string, error) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, payload)
 
-	t, err := token.SignedString(jwtSecretKey)
+	t, err := token.SignedString(c.jwtSecretKey)
 	if err != nil {
 		c.log.With("error", err).Error("error signing token")
 		return "", err
@@ -37,7 +35,7 @@ func (c *Controller) buildJWT(user dto.User) (string, error) {
 func (c *Controller) jwtPayloadFromRequest(tokenString string) (jwt.MapClaims, error) {
 
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		return jwtSecretKey, nil
+		return c.jwtSecretKey, nil
 	})
 
 	if err != nil {

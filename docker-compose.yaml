@@ -1,0 +1,42 @@
+version: "3.7"
+
+services:
+  backend:
+    build:
+      dockerfile: build/Dockerfile
+    container_name: backend
+    restart: always
+    environment:
+      PG_URL: "postgres://user:123456789@wallet_calc_pg:5432/wallet_calc_storage?sslmode=disable&connect_timeout=10"
+      SERVICE_NAME: "wallet_calc"
+      PUBLIC_URL: "http://localhost:8084"
+      SECRET_KEY: "sdafdgmasdfa"
+      HTTP_PORT: "8084"
+    ports:
+      - "8085:8085"
+    networks:
+      - main
+
+  postgres:
+    container_name: wallet_calc_pg
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_MULTIPLE_DATABASES: wallet_calc_storage
+      POSTGRES_USER: "user"
+      POSTGRES_PASSWORD: "123456789"
+      POSTGRES_HOST_AUTH_METHOD: trust
+      POSTGRES_EXTENSIONS: "uuid-ossp"
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./init-multiple-databases.sh:/docker-entrypoint-initdb.d/init-multiple-databases.sh
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      - main
+
+volumes:
+  pg_data:
+
+networks:
+  main:
