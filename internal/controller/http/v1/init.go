@@ -20,7 +20,7 @@ type (
 
 func InitControllers(cfg config.Config, mx *mux.Router, u userUsecase, t transactionUsecase, cu categoryUsecase, log *slog.Logger) {
 	c := &Controller{
-		log:                log,
+		log:                log.With("component", "controller"),
 		userUsecase:        u,
 		transactionUsecase: t,
 		categoryUsecase:    cu,

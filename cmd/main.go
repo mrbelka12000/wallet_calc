@@ -9,6 +9,7 @@ import (
 
 	"github.com/gorilla/mux"
 
+	"github.com/mrbelka12000/wallet_calc/internal/client/ai"
 	v1 "github.com/mrbelka12000/wallet_calc/internal/controller/http/v1"
 	"github.com/mrbelka12000/wallet_calc/internal/repo"
 	"github.com/mrbelka12000/wallet_calc/internal/usecase"
@@ -40,9 +41,13 @@ func main() {
 	categoryRepo := repo.NewCategory()
 	categoryUsecase := usecase.NewCategoryUsecase(categoryRepo, db)
 
-	mx := mux.NewRouter()
+	transactionUsecase := usecase.NewTransactionUsecase(cfg, log)
 
-	v1.InitControllers(cfg, mx, userUsecase, nil, categoryUsecase, log)
+	aiClient := ai.NewClient(log.With("component", "ai"), cfg.APIKey)
+	_ = aiClient
+
+	mx := mux.NewRouter()
+	v1.InitControllers(cfg, mx, userUsecase, transactionUsecase, categoryUsecase, log)
 
 	srv := server.New(mx, cfg.HTTPPort)
 	srv.Start()

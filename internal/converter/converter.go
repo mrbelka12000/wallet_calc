@@ -77,3 +77,19 @@ func ConvertFromEntityAccountsToDTO(accounts []entity.Account) []dto.AccountResp
 
 	return dtoAccounts
 }
+
+func ConvertFromDomainModelBtToDTO(trxs []domainmodel.BaseTransaction) []dto.BaseTransaction {
+	dtoTransactions := make([]dto.BaseTransaction, len(trxs))
+	for i, trx := range trxs {
+		dtoTransactions[i] = dto.BaseTransaction{
+			Date:        trx.Date,
+			Description: trx.Description,
+			Amount:      trx.Amount,
+			Transaction: trx.Transaction,
+			Category:    trx.Category,
+			Confidence:  trx.Confidence,
+		}
+	}
+
+	return dtoTransactions
+}

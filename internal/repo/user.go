@@ -20,7 +20,7 @@ func (u *User) Create(db *gorm.DB, req entity.User) error {
 
 func (u *User) Get(db *gorm.DB, req entity.User) (entity.User, error) {
 	var result entity.User
-	query := db.Model(&User{})
+	query := db.Model(&entity.User{})
 
 	// Dynamically build the query from non-zero fields
 	if req.ID != uuid.Nil {

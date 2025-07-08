@@ -14,6 +14,8 @@ RUN  go build -o main cmd/main.go
 ## Deploy
 FROM alpine
 
+RUN apk add --no-cache poppler-utils
+
 WORKDIR /
 
 COPY --from=buildenv  /app/ /

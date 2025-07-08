@@ -11,4 +11,7 @@ func setUpRoutes(mx *mux.Router, c *Controller) {
 
 	categoryRoutes := mx.PathPrefix("/category").Subrouter()
 	categoryRoutes.HandleFunc("/", c.CategoryList).Methods("GET", "OPTIONS")
+
+	transactionRoutes := mx.PathPrefix("/transaction").Subrouter()
+	transactionRoutes.HandleFunc("/upload", c.UploadStatement).Methods("POST", "OPTIONS")
 }

@@ -3,6 +3,8 @@ package v1
 import (
 	"context"
 
+	"github.com/google/uuid"
+
 	domainmodel "github.com/mrbelka12000/wallet_calc/internal/domain_model"
 	"github.com/mrbelka12000/wallet_calc/internal/dto"
 )
@@ -15,6 +17,7 @@ type (
 	}
 
 	transactionUsecase interface {
+		ParseStatement(ctx context.Context, fileName string, parserID uuid.UUID) ([]dto.BaseTransaction, error)
 	}
 
 	categoryUsecase interface {

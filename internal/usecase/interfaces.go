@@ -6,6 +6,7 @@ import (
 
 	"gorm.io/gorm"
 
+	domainmodel "github.com/mrbelka12000/wallet_calc/internal/domain_model"
 	"github.com/mrbelka12000/wallet_calc/internal/entity"
 	"github.com/mrbelka12000/wallet_calc/pkg/gorm/postgres"
 )
@@ -29,5 +30,9 @@ type (
 	db interface {
 		TxBegin(ctx context.Context) *postgres.Gorm
 		WithCtx(ctx context.Context) *postgres.Gorm
+	}
+
+	baseParser interface {
+		ParseStatement(ctx context.Context, fileName string) ([]domainmodel.BaseTransaction, error)
 	}
 )
