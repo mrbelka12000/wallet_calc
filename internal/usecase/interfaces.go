@@ -33,6 +33,10 @@ type (
 	}
 
 	baseParser interface {
-		ParseStatement(ctx context.Context, fileName string) ([]domainmodel.BaseTransaction, error)
+		ParseStatement(ctx context.Context, fileName string, categories []string) ([]domainmodel.BaseTransaction, error)
+	}
+
+	categoryUsecase interface {
+		List(ctx context.Context) ([]domainmodel.Category, error)
 	}
 )

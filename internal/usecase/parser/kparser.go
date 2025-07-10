@@ -3,6 +3,7 @@ package parser
 import (
 	"context"
 	"log/slog"
+	"runtime"
 	"strings"
 	"sync"
 
@@ -15,24 +16,26 @@ import (
 const (
 	kOffsetForParse = 20
 
-	offsetForAI = 1000
+	offsetForAI = 50
 )
 
 type KParser struct {
-	aiClient aiClient
-	getter   getter
-	log      *slog.Logger
+	aiClient     aiClient
+	getter       getter
+	log          *slog.Logger
+	numOfWorkers int
 }
 
 func NewKParser(cfg config.Config, log *slog.Logger) *KParser {
 	return &KParser{
-		aiClient: ai.NewClient(log.With("component", "ai"), cfg.APIKey),
-		getter:   pdftotext.NewGetter(),
-		log:      log,
+		aiClient:     ai.NewClient(log.With("component", "ai"), cfg.AIKey),
+		getter:       pdftotext.NewGetter(),
+		log:          log,
+		numOfWorkers: runtime.NumCPU(),
 	}
 }
 
-func (p *KParser) ParseStatement(ctx context.Context, fileName string) ([]domainmodel.BaseTransaction, error) {
+func (p *KParser) ParseStatement(ctx context.Context, fileName string, categories []string) ([]domainmodel.BaseTransaction, error) {
 	textFromPDF, err := p.getter.GetTextFromPDF(fileName, kOffsetForParse)
 	if err != nil {
 		return nil, err
@@ -40,13 +43,15 @@ func (p *KParser) ParseStatement(ctx context.Context, fileName string) ([]domain
 
 	var (
 		dataToParse = strings.Split(textFromPDF, "\n")
-		result      = make([]domainmodel.BaseTransaction, 0, len(dataToParse))
+		result      = make([]domainmodel.BaseTransaction, len(dataToParse))
 		mx          = sync.Mutex{}
 		wg          = sync.WaitGroup{}
+		workerPool  = make(chan struct{}, p.numOfWorkers)
 	)
 
 	for i := 0; i < len(dataToParse); i += offsetForAI {
 		wg.Add(1)
+		workerPool <- struct{}{}
 
 		go func(l int) {
 			defer wg.Done()
@@ -57,7 +62,10 @@ func (p *KParser) ParseStatement(ctx context.Context, fileName string) ([]domain
 			}
 
 			var tmpResult []ai.Record
-			tmpResult, err = p.aiClient.Parse(ctx, strings.Join(dataToParse[l:r], "\n"))
+			tmpResult, err = p.aiClient.Parse(ctx, ai.ParseRequest{
+				TextToParse: strings.Join(dataToParse[l:r], "\n"),
+				Categories:  categories,
+			})
 			if err != nil {
 				p.log.Warn("parse error", "err", err)
 				return
@@ -66,20 +74,34 @@ func (p *KParser) ParseStatement(ctx context.Context, fileName string) ([]domain
 			mx.Lock()
 			defer mx.Unlock()
 
+			ind := l
 			for _, tx := range tmpResult {
-				result = append(result, domainmodel.BaseTransaction{
+				result[ind] = domainmodel.BaseTransaction{
 					Date:        tx.Date,
 					Description: tx.Details,
 					Amount:      tx.Amount,
 					Transaction: tx.Transaction,
 					Category:    tx.Category,
 					Confidence:  tx.Confidence,
-				})
+				}
+				ind++
 			}
+
+			<-workerPool
 		}(i)
 	}
 
 	wg.Wait()
+	close(workerPool)
 
-	return result, err
+	filteredResult := make([]domainmodel.BaseTransaction, 0, len(result))
+	var empty domainmodel.BaseTransaction
+	for _, tx := range result {
+		if tx == empty {
+			continue
+		}
+		filteredResult = append(filteredResult, tx)
+	}
+
+	return filteredResult, err
 }

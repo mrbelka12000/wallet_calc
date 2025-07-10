@@ -8,7 +8,7 @@ import (
 
 type (
 	aiClient interface {
-		Parse(ctx context.Context, textToParse string) ([]ai.Record, error)
+		Parse(ctx context.Context, req ai.ParseRequest) ([]ai.Record, error)
 	}
 
 	getter interface {

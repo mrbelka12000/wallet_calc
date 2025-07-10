@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS accounts(
     user_id UUID NOT NULL,
     name VARCHAR NOT NULL,
     balance NUMERIC,
+    parser_id UUID NOT NULL,
     created_at TIMESTAMP default now(),
     CONSTRAINT fk_accounts_users foreign key (user_id) REFERENCES users(id)
 );

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/go-playground/locales/kea"
 	"github.com/google/uuid"
 
 	"github.com/mrbelka12000/wallet_calc/internal/converter"
@@ -23,12 +22,14 @@ var (
 type (
 	TransactionUsecase struct {
 		parsers map[uuid.UUID]baseParser
+		cu      categoryUsecase
 	}
 )
 
-func NewTransactionUsecase(cfg config.Config, log *slog.Logger) *TransactionUsecase {
+func NewTransactionUsecase(cfg config.Config, log *slog.Logger, cu categoryUsecase) *TransactionUsecase {
 	t := &TransactionUsecase{
 		parsers: make(map[uuid.UUID]baseParser),
+		cu:      cu,
 	}
 
 	t.init(cfg, log)
@@ -46,16 +47,26 @@ func (t *TransactionUsecase) ParseStatement(ctx context.Context, fileName string
 		return nil, errors.New("parser not found")
 	}
 
-	parsed, err := parser.ParseStatement(ctx, fileName)
+	categories, err := t.cu.List(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	return converter.ConvertFromDomainModelBtToDTO(parsed), nil
+	categoriesStr := make([]string, len(categories))
+	for i, category := range categories {
+		categoriesStr[i] = category.Name
+	}
+
+	baseTransactions, err := parser.ParseStatement(ctx, fileName, categoriesStr)
+	if err != nil {
+		return nil, err
+	}
+
+	return converter.ConvertFromDomainModelBtToDTO(baseTransactions), nil
 }
 
 func (t *TransactionUsecase) SaveTransactions(ctx context.Context, bt []domainmodel.BaseTransaction) error {
-
+	return nil
 }
 
 func groupTransactions(bts []domainmodel.BaseTransaction) map[string][]domainmodel.BaseTransaction {

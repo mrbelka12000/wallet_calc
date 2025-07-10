@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strings"
 )
 
 const (
@@ -22,21 +23,18 @@ Each object in the JSON array should include the following fields:
 - "amount": numeric amount (positive for income, negative for expenses)
 - "transaction": type of transaction (e.g., Purchases, Transfers, Replenishment, Others)
 - "details": merchant or explanation
-- "category": guessed category of transaction (e.g., food, transport, shopping, transfer, topup, service, uncategorized)
+- "category": the best-matching category from the provided list
 - "confidence": float between 0.0 and 1.0 representing confidence in the category assignment
 
 ### Rules:
-- Use semantic clues from "details" and "transaction" to determine category.
-- Keep amounts as floats with two decimal precision.
-- Use lowercased, English category names.
-- The final output must be a valid JSON array.
+- **Only use categories from the provided list. Do not invent new categories.**
+- Use semantic clues from "details" and "transaction" to determine the category.
+- Keep amounts as floats with two decimal places.
+- Use lowercased, English category names (e.g., "fuel / gas", not "Fuel / Gas").
+- Output must be a valid JSON array.
+- Do not include any extra text—return JSON only.
 
-### Example input:
-02.07.25            - 5 000,00 ₸              Purchases        ТОО BEATRICE
-30.06.25          + 20 000,00 ₸           Replenishment        From card of other banks
-30.06.25            - 1 000,00 ₸                   Transfers   Афонасий М.
-
-### Example output(without any extra text, without formatting, only raw json, without newlines):
+### Example output (no newlines, no explanation, raw JSON only):
 [
 {
 "date": "02.07.25",
@@ -57,6 +55,9 @@ Each object in the JSON array should include the following fields:
 ]
 
 
+### Available categories:
+%s
+
 
 ### Bank statement:
 %s
@@ -68,6 +69,11 @@ type (
 		hc    *http.Client
 		log   *slog.Logger
 		token string
+	}
+
+	ParseRequest struct {
+		TextToParse string
+		Categories  []string
 	}
 
 	In struct {
@@ -107,7 +113,7 @@ func NewClient(log *slog.Logger, token string) *Client {
 	}
 }
 
-func (c *Client) Parse(ctx context.Context, textToParse string) ([]Record, error) {
+func (c *Client) Parse(ctx context.Context, req ParseRequest) ([]Record, error) {
 	var out Out
 
 	err := c.do(ctx,
@@ -116,7 +122,7 @@ func (c *Client) Parse(ctx context.Context, textToParse string) ([]Record, error
 			Messages: []Message{
 				{
 					Role:    "user",
-					Content: fmt.Sprintf(parsePrompt, textToParse),
+					Content: fmt.Sprintf(parsePrompt, strings.Join(req.Categories, ", "), req.TextToParse),
 				},
 			},
 		},
